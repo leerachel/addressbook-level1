@@ -99,7 +99,8 @@ public class AddressBook {
                                                             + PERSON_DATA_PREFIX_PHONE + "%2$s " // phone
                                                             + PERSON_DATA_PREFIX_EMAIL + "%3$s"; // email
     private static final String COMMAND_ADD_WORD = "add";
-    private static final String COMMAND_ADD_DESC = "Adds a person to the address book.";
+    private static final String COMMAND_ADD_DESC = "Adds a person to the address book."
+                                                + "Please enter valid Phone Number of 8 digits.";
     private static final String COMMAND_ADD_PARAMETERS = "NAME "
                                                       + PERSON_DATA_PREFIX_PHONE + "PHONE_NUMBER "
                                                       + PERSON_DATA_PREFIX_EMAIL + "EMAIL";
@@ -107,7 +108,7 @@ public class AddressBook {
 
     private static final String COMMAND_FIND_WORD = "find";
     private static final String COMMAND_FIND_DESC = "Finds all persons whose names contain any of the specified "
-                                        + "keywords (case-sensitive) and displays them as a list with index numbers.";
+                                        + "keywords (NOT case-sensitive) and displays them as a list with index numbers.";
     private static final String COMMAND_FIND_PARAMETERS = "KEYWORD [MORE_KEYWORDS]";
     private static final String COMMAND_FIND_EXAMPLE = COMMAND_FIND_WORD + " alice bob charlie";
 
@@ -444,12 +445,13 @@ public class AddressBook {
 
     /**
      * Finds and lists all persons in address book whose name contains any of the argument keywords.
-     * Keyword matching is case sensitive.
+     * Keyword matching is NOT case sensitive.
      *
      * @param commandArgs full command args string from the user
      * @return feedback display message for the operation result
      */
     private static String executeFindPersons(String commandArgs) {
+        commandArgs = commandArgs.toLowerCase(); //making everything small case
         final Set<String> keywords = extractKeywordsFromFindPersonArgs(commandArgs);
         final ArrayList<String[]> personsFound = getPersonsWithNameContainingAnyKeyword(keywords);
         showToUser(personsFound);
@@ -485,7 +487,7 @@ public class AddressBook {
     private static ArrayList<String[]> getPersonsWithNameContainingAnyKeyword(Collection<String> keywords) {
         final ArrayList<String[]> matchedPersons = new ArrayList<>();
         for (String[] person : getAllPersonsInAddressBook()) {
-            final Set<String> wordsInName = new HashSet<>(splitByWhitespace(getNameFromPerson(person)));
+            final Set<String> wordsInName = new HashSet<>(splitByWhitespace(getSmallCaseNameFromPerson(person)));
             if (!Collections.disjoint(wordsInName, keywords)) {
                 matchedPersons.add(person);
             }
@@ -834,12 +836,19 @@ public class AddressBook {
      */
 
     /**
-     * Returns the given person's name
+     * Returns the given person's name in original form
      *
      * @param person whose name you want
      */
-    private static String getNameFromPerson(String[] person) {
-        return person[PERSON_DATA_INDEX_NAME];
+    private static String getNameFromPerson(String[] person) { return person[PERSON_DATA_INDEX_NAME]; }
+
+    /**
+     * Returns the given person's name in all small cases
+     *
+     * @param person whose name you want
+     */
+    private static String getSmallCaseNameFromPerson(String[] person) {
+        return person[PERSON_DATA_INDEX_NAME].toLowerCase();
     }
 
     /**
@@ -1058,7 +1067,15 @@ public class AddressBook {
      * @param phone to be validated
      */
     private static boolean isPersonPhoneValid(String phone) {
-        return phone.matches("\\d+");    // phone nonempty sequence of digits
+        if (phone.matches("\\d+")) { //phone are digits
+            if (phone.length() != 8) { //to be valid, exactly 8 digits needed
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+        else return false;
         //TODO: implement a more permissive validation
     }
 
